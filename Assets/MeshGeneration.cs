@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,81 +7,116 @@ using UnityEngine;
 [RequireComponent(typeof(MeshRenderer))]
 public class MeshGeneration : MonoBehaviour
 {
-    public int width;
-    public int length;
     private Mesh mesh;
-    private Vector3[] vertices;
+    private Vector3[] verticies;
     private int[] triangles;
-    private Biome biomeType;
 
+    [Header("Terrain Settings")]
+    public int terrainSize = 20;
+    public float TerrainResolution = 1f;
+    [Range(1, 100)]
+    public float vertexSpacing = 10;
+
+    [Header("Perlin Settings")]
+    [Range(0.001f, .999f)]
+    public float frequency = .3f;
+    [Range(0.001f, 10f)]
+    public float amplitude = 2f;
+
+    private Biome biome;
     private enum Biome
     {
         Plains,
-        Pond,
-        ForestHigh,
-        Swamp
+        Valley,
+        Mountain
     }
-    void Start()
+
+    private void Start()
     {
-        mesh = new Mesh();
-        GetComponent<MeshFilter>().mesh = mesh;
-        CreateShape();
+        CreateTerrain();
+    }
+    private void Update()
+    {
+        CreateTerrain();
+    }
+
+    public void CreateTerrain()
+    {
+        GenerateMesh();
         UpdateMesh();
     }
 
-    void CreateShape()
+    private void GenerateMesh()
     {
-        vertices = new Vector3[(width + 1) * (length + 1)];
+        var vertexFieldSize = Mathf.FloorToInt(terrainSize / TerrainResolution);
 
-        int vertexCount = 0;
-        for (int z = 0; z < length; z++)
+        verticies = new Vector3[
+            (int)Mathf.Pow(vertexFieldSize + 1, 2)
+        ];
+
+        var tSizeVector = new Vector3(vertexFieldSize / 2f, 1, vertexFieldSize / 2f) * TerrainResolution;
+
+        for (int i = 0, x = 0; x <= vertexFieldSize; x++)
         {
-            for (int x = 0; x < width; x++)
+            for (int z = 0; z <= vertexFieldSize; z++)
             {
-                vertices[vertexCount] = new Vector3((this.transform.position.x - width / 2) + x, PerlinNoise(x, z), (this.transform.position.z - length / 2) + z);
-                vertexCount++;
+                float y = PerlinNoise(this.transform.position.x + x, this.transform.position.z +z);
+                verticies[i] = new Vector3(x * vertexSpacing, y, z * vertexSpacing);
+                i++;
             }
         }
 
-        triangles = new int[length * width * 6];
-        int verticeBeingUsed = 0;
-        int triangle = 0;
-        for (int z = 0; z < length; z++)
+        int vert = 0, tris = 0;
+        triangles = new int[vertexFieldSize * vertexFieldSize * 6];
+        for (int z = 0; z < vertexFieldSize; z++)
         {
-            for (int x = 0; x < width; x++)
+            for (int x = 0; x < vertexFieldSize; x++)
             {
-                triangles[triangle] = verticeBeingUsed;
-                triangles[triangle + 1] = verticeBeingUsed + 1 + width;
-                triangles[triangle + 2] = verticeBeingUsed + 1;
-                triangles[triangle + 3] = verticeBeingUsed + 1;
-                triangles[triangle + 4] = verticeBeingUsed + 1 + width;
-                triangles[triangle + 5] = verticeBeingUsed + 2 + width;
-                verticeBeingUsed++;
-                triangle += 6;
+                triangles[tris + 0] = vert + 0;
+                triangles[tris + 1] = vert + vertexFieldSize + 1;
+                triangles[tris + 2] = vert + 1;
+
+                triangles[tris + 3] = vert + 1;
+                triangles[tris + 4] = vert + vertexFieldSize + 1;
+                triangles[tris + 5] = vert + vertexFieldSize + 2;
+
+                vert++;
+                tris += 6;
             }
+            vert++;
         }
+
+        Array.Reverse(triangles); // so that they face upwards
+
     }
 
-    void UpdateMesh()
+    private void UpdateMesh()
     {
+        if (mesh == null)
+        {
+            mesh = new Mesh();
+            mesh.name = "Generic Mesh Terrain";
+        }
         mesh.Clear();
-
-        mesh.vertices = vertices;
+        mesh.vertices = verticies;
         mesh.triangles = triangles;
+        GetComponent<MeshFilter>().sharedMesh = mesh;
+        GetComponent<MeshCollider>().sharedMesh = mesh;
+        mesh.RecalculateBounds();
+        mesh.RecalculateNormals();
     }
 
     private float PerlinNoise(float x, float y)
     {
-        float perlin = Mathf.PerlinNoise(x / width, y / width);
-        perlin = Mathf.Round(perlin);
-
-        if (biomeType == Biome.Pond || biomeType == Biome.Swamp)
+        if (biome == Biome.Mountain)
         {
-            return -perlin;
-        }
-        else
+            return Mathf.PerlinNoise(x * frequency, y * frequency) * amplitude;
+        } else if (biome == Biome.Valley)
         {
-            return perlin;
+            return -Mathf.PerlinNoise(x * frequency, y * frequency) * amplitude;
+        } else
+        {
+            return Mathf.PerlinNoise(x * frequency, y * frequency) * (amplitude*10);
         }
     }
 }
