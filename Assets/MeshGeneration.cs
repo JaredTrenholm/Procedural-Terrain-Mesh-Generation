@@ -13,9 +13,6 @@ public class MeshGeneration : MonoBehaviour
 
     [Header("Terrain Settings")]
     public int terrainSize = 20;
-    public float TerrainResolution = 1f;
-    [Range(1, 100)]
-    public float vertexSpacing = 10;
 
     [Header("Perlin Settings")]
     [Range(0.001f, .999f)]
@@ -23,12 +20,13 @@ public class MeshGeneration : MonoBehaviour
     [Range(0.001f, 10f)]
     public float amplitude = 2f;
 
-    private Biome biome;
+    private Biome[] biomes;
     private enum Biome
     {
         Plains,
         Valley,
-        Mountain
+        Mountain,
+        BiomeCount
     }
 
     private void Start()
@@ -42,43 +40,41 @@ public class MeshGeneration : MonoBehaviour
 
     public void CreateTerrain()
     {
+        biomes = new Biome[(terrainSize + 1) * (terrainSize + 1)];
         GenerateMesh();
         UpdateMesh();
     }
 
     private void GenerateMesh()
     {
-        var vertexFieldSize = Mathf.FloorToInt(terrainSize / TerrainResolution);
+        verticies = new Vector3[(terrainSize+1)*(terrainSize + 1)];
 
-        verticies = new Vector3[
-            (int)Mathf.Pow(vertexFieldSize + 1, 2)
-        ];
-
-        var tSizeVector = new Vector3(vertexFieldSize / 2f, 1, vertexFieldSize / 2f) * TerrainResolution;
-
-        for (int i = 0, x = 0; x <= vertexFieldSize; x++)
+        int zLoopCompletes = 0;
+        for (int i = 0, x = 0; x <= terrainSize; x++)
         {
-            for (int z = 0; z <= vertexFieldSize; z++)
+            for (int z = 0; z <= terrainSize; z++)
             {
-                float y = PerlinNoise(this.transform.position.x + x, this.transform.position.z +z);
-                verticies[i] = new Vector3(x * vertexSpacing, y, z * vertexSpacing);
+                GenerateBiome(this.transform.position.x + x, this.transform.position.z + z, zLoopCompletes);
+                float y = GetBiomeHeight(this.transform.position.x + x, this.transform.position.z +z, zLoopCompletes);
+                verticies[i] = new Vector3(this.transform.position.x + x, this.transform.position.y + y, this.transform.position.z + z);
                 i++;
             }
+            zLoopCompletes += terrainSize;
         }
 
         int vert = 0, tris = 0;
-        triangles = new int[vertexFieldSize * vertexFieldSize * 6];
-        for (int z = 0; z < vertexFieldSize; z++)
+        triangles = new int[terrainSize * terrainSize * 6];
+        for (int z = 0; z < terrainSize; z++)
         {
-            for (int x = 0; x < vertexFieldSize; x++)
+            for (int x = 0; x < terrainSize; x++)
             {
                 triangles[tris + 0] = vert + 0;
-                triangles[tris + 1] = vert + vertexFieldSize + 1;
+                triangles[tris + 1] = vert + terrainSize + 1;
                 triangles[tris + 2] = vert + 1;
 
                 triangles[tris + 3] = vert + 1;
-                triangles[tris + 4] = vert + vertexFieldSize + 1;
-                triangles[tris + 5] = vert + vertexFieldSize + 2;
+                triangles[tris + 4] = vert + terrainSize + 1;
+                triangles[tris + 5] = vert + terrainSize + 2;
 
                 vert++;
                 tris += 6;
@@ -95,7 +91,7 @@ public class MeshGeneration : MonoBehaviour
         if (mesh == null)
         {
             mesh = new Mesh();
-            mesh.name = "Generic Mesh Terrain";
+            mesh.name = "Generated Terrain Mesh";
         }
         mesh.Clear();
         mesh.vertices = verticies;
@@ -106,17 +102,37 @@ public class MeshGeneration : MonoBehaviour
         mesh.RecalculateNormals();
     }
 
-    private float PerlinNoise(float x, float y)
+    private void GenerateBiome(float x, float y, int zLoopCompletes)
     {
-        if (biome == Biome.Mountain)
+        float perlin = PerlinNoise(x, y);
+        if (perlin <= (int)Biome.Mountain / (int)Biome.BiomeCount)
         {
-            return Mathf.PerlinNoise(x * frequency, y * frequency) * amplitude;
-        } else if (biome == Biome.Valley)
+            biomes[(int)x+(int)y+zLoopCompletes] = Biome.Mountain;
+        }
+        else if (perlin <= (int)Biome.Valley + (int)Biome.Valley / (int)Biome.BiomeCount)
         {
-            return -Mathf.PerlinNoise(x * frequency, y * frequency) * amplitude;
+            biomes[(int)x + (int)y + zLoopCompletes] = Biome.Valley;
+        }
+        else
+        {
+            biomes[(int)x + (int)y + zLoopCompletes] = Biome.Plains;
+        }
+    }
+    private float GetBiomeHeight(float x, float y, int zLoopCompletes)
+    {
+        if (biomes[(int)x+(int)y+zLoopCompletes] == Biome.Mountain)
+        {
+            return PerlinNoise(x,y)*5;
+        } else if (biomes[(int)x + (int)y + zLoopCompletes] == Biome.Valley)
+        {
+            return -PerlinNoise(x, y);
         } else
         {
-            return Mathf.PerlinNoise(x * frequency, y * frequency) * (amplitude*10);
+            return PerlinNoise(x, y);
         }
+    }
+    private float PerlinNoise(float x, float y)
+    {
+        return Mathf.PerlinNoise(x * frequency, y * frequency) * amplitude;
     }
 }

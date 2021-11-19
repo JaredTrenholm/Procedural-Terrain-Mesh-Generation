@@ -331,11 +331,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 925508d80d7b5b5418c34ac3ac34d436, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  terrainSize: 100
-  TerrainResolution: 1
-  vertexSpacing: 454
-  frequency: 0.29
-  amplitude: 2
+  terrainSize: 125
+  frequency: 0.054
+  amplitude: 3
 --- !u!23 &1556135869
 MeshRenderer:
   m_ObjectHideFlags: 0
