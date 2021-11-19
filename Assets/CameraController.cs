@@ -34,6 +34,6 @@ public class CameraController : MonoBehaviour
             this.transform.Translate(Vector3.right * speed * Time.deltaTime);
         }
 
-        this.transform.position = new Vector3(this.transform.position.x, originalY, this.transform.position.z);
+        this.transform.position = new Vector3(Mathf.Round(this.transform.position.x), originalY, Mathf.Round(this.transform.position.z));
     }
 }

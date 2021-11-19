@@ -64,7 +64,7 @@ public class MeshGeneration : MonoBehaviour
             {
                 GenerateBiome(x, z, zLoopCompletes);
                 float y = GetBiomeHeight(x, z, zLoopCompletes);
-                verticies[i] = new Vector3(playerTransform.position.x + x - terrainSize/2, this.transform.position.y + y, playerTransform.position.z + z - terrainSize / 2);
+                verticies[i] = new Vector3(playerTransform.position.x + x - terrainSize/2, this.transform.position.y + y, playerTransform.position.z + z - terrainSize / 4);
                 i++;
             }
             zLoopCompletes += terrainSize;
@@ -101,10 +101,9 @@ public class MeshGeneration : MonoBehaviour
             mesh = new Mesh();
             mesh.name = "Generated Terrain Mesh";
         }
-        mesh.Clear();
         mesh.vertices = verticies;
         mesh.triangles = triangles;
-        GetComponent<MeshFilter>().sharedMesh = mesh;
+        GetComponent<MeshFilter>().mesh = mesh;
         GetComponent<MeshCollider>().sharedMesh = mesh;
         mesh.RecalculateBounds();
         mesh.RecalculateNormals();
