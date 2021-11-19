@@ -11,6 +11,9 @@ public class MeshGeneration : MonoBehaviour
     private Vector3[] verticies;
     private int[] triangles;
 
+    [Header("Object Transform Settings")]
+    public Transform playerTransform;
+
     [Header("Terrain Settings")]
     public int terrainSize = 20;
 
@@ -19,6 +22,9 @@ public class MeshGeneration : MonoBehaviour
     public float frequency = .3f;
     [Range(0.001f, 10f)]
     public float amplitude = 2f;
+
+    public int mountainsWeight = 0;
+    public int valleyWeight = 0;
 
     private Biome[] biomes;
     private enum Biome
@@ -31,11 +37,13 @@ public class MeshGeneration : MonoBehaviour
 
     private void Start()
     {
+        verticies = new Vector3[(terrainSize + 1) * (terrainSize + 1)];
+        triangles = new int[terrainSize * terrainSize * 6];
         CreateTerrain();
     }
     private void Update()
     {
-        CreateTerrain();
+       CreateTerrain();
     }
 
     public void CreateTerrain()
@@ -47,16 +55,16 @@ public class MeshGeneration : MonoBehaviour
 
     private void GenerateMesh()
     {
-        verticies = new Vector3[(terrainSize+1)*(terrainSize + 1)];
+        
 
         int zLoopCompletes = 0;
         for (int i = 0, x = 0; x <= terrainSize; x++)
         {
             for (int z = 0; z <= terrainSize; z++)
             {
-                GenerateBiome(this.transform.position.x + x, this.transform.position.z + z, zLoopCompletes);
-                float y = GetBiomeHeight(this.transform.position.x + x, this.transform.position.z +z, zLoopCompletes);
-                verticies[i] = new Vector3(this.transform.position.x + x, this.transform.position.y + y, this.transform.position.z + z);
+                GenerateBiome(x, z, zLoopCompletes);
+                float y = GetBiomeHeight(x, z, zLoopCompletes);
+                verticies[i] = new Vector3(playerTransform.position.x + x - terrainSize/2, this.transform.position.y + y, playerTransform.position.z + z - terrainSize / 2);
                 i++;
             }
             zLoopCompletes += terrainSize;
@@ -104,12 +112,13 @@ public class MeshGeneration : MonoBehaviour
 
     private void GenerateBiome(float x, float y, int zLoopCompletes)
     {
-        float perlin = PerlinNoise(x, y);
-        if (perlin <= (int)Biome.Mountain / (int)Biome.BiomeCount)
+        float biomeWeights = PerlinNoise(playerTransform.position.x + x, playerTransform.position.z + y)*100;
+
+        if (biomeWeights <= mountainsWeight)
         {
-            biomes[(int)x+(int)y+zLoopCompletes] = Biome.Mountain;
+            biomes[(int)x + (int)y + zLoopCompletes] = Biome.Mountain;
         }
-        else if (perlin <= (int)Biome.Valley + (int)Biome.Valley / (int)Biome.BiomeCount)
+        else if (biomeWeights <= mountainsWeight+valleyWeight)
         {
             biomes[(int)x + (int)y + zLoopCompletes] = Biome.Valley;
         }
@@ -122,13 +131,16 @@ public class MeshGeneration : MonoBehaviour
     {
         if (biomes[(int)x+(int)y+zLoopCompletes] == Biome.Mountain)
         {
-            return PerlinNoise(x,y)*5;
+            
+            return PerlinNoise(playerTransform.position.x + x, playerTransform.position.z + y) * 2;
         } else if (biomes[(int)x + (int)y + zLoopCompletes] == Biome.Valley)
         {
-            return -PerlinNoise(x, y);
+            
+            return -PerlinNoise(playerTransform.position.x + x, playerTransform.position.z + y);
         } else
         {
-            return PerlinNoise(x, y);
+            
+            return PerlinNoise(playerTransform.position.x + x, playerTransform.position.z + y);
         }
     }
     private float PerlinNoise(float x, float y)
