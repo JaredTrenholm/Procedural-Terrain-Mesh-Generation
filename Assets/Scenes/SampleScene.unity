@@ -332,8 +332,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   terrainSize: 125
-  frequency: 0.054
-  amplitude: 3
+  frequency: 0.15
+  amplitude: 2
 --- !u!23 &1556135869
 MeshRenderer:
   m_ObjectHideFlags: 0
