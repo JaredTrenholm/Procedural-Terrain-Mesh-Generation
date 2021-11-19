@@ -10,6 +10,7 @@ public class MeshGeneration : MonoBehaviour
     private Mesh mesh;
     private Vector3[] verticies;
     private int[] triangles;
+    private int[] mountainTris;
 
     [Header("Object Transform Settings")]
     public Transform playerTransform;
@@ -39,11 +40,6 @@ public class MeshGeneration : MonoBehaviour
 
     private void Start()
     {
-        for (int i = 0; i < 100; i++)
-        {
-            Debug.Log(Mathf.PerlinNoise(i * frequency, i * frequency));
-        }
-
         verticies = new Vector3[(terrainSize + 1) * (terrainSize + 1)];
         triangles = new int[terrainSize * terrainSize * 6];
         CreateTerrain();
@@ -77,30 +73,83 @@ public class MeshGeneration : MonoBehaviour
             zLoopCompletes += terrainSize;
         }
 
+        zLoopCompletes = 0;
         int vert = 0, tris = 0;
         triangles = new int[terrainSize * terrainSize * 6];
+        mountainTris = new int[terrainSize * terrainSize * 6];
         for (int z = 0; z < terrainSize; z++)
         {
             for (int x = 0; x < terrainSize; x++)
             {
-                triangles[tris + 0] = vert + 0;
-                triangles[tris + 1] = vert + terrainSize + 1;
-                triangles[tris + 2] = vert + 1;
-
-                triangles[tris + 3] = vert + 1;
-                triangles[tris + 4] = vert + terrainSize + 1;
-                triangles[tris + 5] = vert + terrainSize + 2;
+                if (IsPartOfMountain(x,z,zLoopCompletes))
+                {
+                    AddTriangle(mountainTris, tris, vert);
+                }
+                else
+                {
+                    AddTriangle(triangles, tris, vert);
+                }
 
                 vert++;
                 tris += 6;
             }
+            zLoopCompletes += terrainSize;
             vert++;
         }
 
         Array.Reverse(triangles); // so that they face upwards
+        Array.Reverse(mountainTris);
 
     }
 
+    private bool IsPartOfMountain(int x, int z, int zLoopCompletes)
+    {
+        bool isPartOfMountain = false;
+
+        if (biomes[x + z + zLoopCompletes] == Biome.Mountain)
+        {
+            isPartOfMountain = true;
+        }
+        else if(x + z + zLoopCompletes - 1 > 0)
+        {
+            if (biomes[x - 1 + z + zLoopCompletes] == Biome.Mountain)
+            {
+                isPartOfMountain = true;
+            }
+        }
+        else if (x + z + zLoopCompletes - terrainSize > 0)
+        {
+            if (biomes[x - 1 + z + zLoopCompletes - terrainSize] == Biome.Mountain)
+            {
+                isPartOfMountain = true;
+            }
+        }
+        else if (x + z + zLoopCompletes + terrainSize < biomes.Length)
+        {
+            if (biomes[x + z + zLoopCompletes + terrainSize] == Biome.Mountain)
+            {
+                isPartOfMountain = true;
+            }
+        }
+        else if (x + z + zLoopCompletes + 1 < biomes.Length)
+        {
+            if (biomes[x + z + zLoopCompletes + 1] == Biome.Mountain)
+            {
+                isPartOfMountain = true;
+            }
+        }        
+        return isPartOfMountain;
+    }
+    private void AddTriangle(int[] triArray, int tris, int vert)
+    {
+        triArray[tris + 0] = vert + 0;
+        triArray[tris + 1] = vert + terrainSize + 1;
+        triArray[tris + 2] = vert + 1;
+
+        triArray[tris + 3] = vert + 1;
+        triArray[tris + 4] = vert + terrainSize + 1;
+        triArray[tris + 5] = vert + terrainSize + 2;
+    }
     private void UpdateMesh()
     {
         if (mesh == null)
@@ -109,7 +158,9 @@ public class MeshGeneration : MonoBehaviour
             mesh.name = "Generated Terrain Mesh";
         }
         mesh.vertices = verticies;
-        mesh.triangles = triangles;
+        mesh.subMeshCount = 2;
+        mesh.SetTriangles(triangles, 0);
+        mesh.SetTriangles(mountainTris, 1);
         GetComponent<MeshFilter>().mesh = mesh;
         GetComponent<MeshCollider>().sharedMesh = mesh;
         mesh.RecalculateBounds();
