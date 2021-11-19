@@ -250,10 +250,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerTransform: {fileID: 1953640090}
   terrainSize: 125
-  frequency: 0.085
-  amplitude: 1
+  elevationChanges: 6
+  frequency: 0.025
+  amplitude: 0.95
   mountainsWeight: 33
-  valleyWeight: 66
+  valleyWeight: 16
 --- !u!23 &1556135869
 MeshRenderer:
   m_ObjectHideFlags: 0

@@ -16,11 +16,13 @@ public class MeshGeneration : MonoBehaviour
 
     [Header("Terrain Settings")]
     public int terrainSize = 20;
+    [Range(1, 10)]
+    public int elevationChanges;
 
     [Header("Perlin Settings")]
     [Range(0.001f, .999f)]
     public float frequency = .3f;
-    [Range(0.001f, 10f)]
+    [Range(1f, 10f)]
     public float amplitude = 2f;
 
     public int mountainsWeight = 0;
@@ -37,6 +39,11 @@ public class MeshGeneration : MonoBehaviour
 
     private void Start()
     {
+        for (int i = 0; i < 100; i++)
+        {
+            Debug.Log(Mathf.PerlinNoise(i * frequency, i * frequency));
+        }
+
         verticies = new Vector3[(terrainSize + 1) * (terrainSize + 1)];
         triangles = new int[terrainSize * terrainSize * 6];
         CreateTerrain();
@@ -109,41 +116,41 @@ public class MeshGeneration : MonoBehaviour
         mesh.RecalculateNormals();
     }
 
-    private void GenerateBiome(float x, float y, int zLoopCompletes)
+    private void GenerateBiome(int x, int y, int zLoopCompletes)
     {
         float biomeWeights = PerlinNoise(playerTransform.position.x + x, playerTransform.position.z + y)*100;
 
         if (biomeWeights <= mountainsWeight)
         {
-            biomes[(int)x + (int)y + zLoopCompletes] = Biome.Mountain;
+            biomes[x + y + zLoopCompletes] = Biome.Mountain;
         }
         else if (biomeWeights <= mountainsWeight+valleyWeight)
         {
-            biomes[(int)x + (int)y + zLoopCompletes] = Biome.Valley;
+            biomes[x + y + zLoopCompletes] = Biome.Valley;
         }
         else
         {
-            biomes[(int)x + (int)y + zLoopCompletes] = Biome.Plains;
+            biomes[x + y + zLoopCompletes] = Biome.Plains;
         }
     }
-    private float GetBiomeHeight(float x, float y, int zLoopCompletes)
+    private float GetBiomeHeight(int x, int y, int zLoopCompletes)
     {
-        if (biomes[(int)x+(int)y+zLoopCompletes] == Biome.Mountain)
+        if (biomes[x+y+zLoopCompletes] == Biome.Mountain)
         {
             
-            return PerlinNoise(playerTransform.position.x + x, playerTransform.position.z + y) * 2;
-        } else if (biomes[(int)x + (int)y + zLoopCompletes] == Biome.Valley)
+            return PerlinNoise(playerTransform.position.x + x, playerTransform.position.z + y) * elevationChanges;
+        } else if (biomes[x + y + zLoopCompletes] == Biome.Valley)
         {
             
-            return -PerlinNoise(playerTransform.position.x + x, playerTransform.position.z + y);
+            return -PerlinNoise(playerTransform.position.x + x, playerTransform.position.z + y) * elevationChanges;
         } else
         {
             
-            return PerlinNoise(playerTransform.position.x + x, playerTransform.position.z + y);
+            return 0;
         }
     }
     private float PerlinNoise(float x, float y)
     {
-        return Mathf.PerlinNoise(x * frequency, y * frequency) * amplitude;
+        return Mathf.PerlinNoise(x * frequency, y * frequency)*amplitude;
     }
 }
