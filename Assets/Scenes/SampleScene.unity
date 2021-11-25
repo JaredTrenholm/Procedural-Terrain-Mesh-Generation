@@ -426,6 +426,13 @@ MonoBehaviour:
   playerTransform: {fileID: 1953640090}
   waterPlane: {fileID: 648946508}
   terrainSize: 90
+  weights:
+  - weight: 100
+    biome: 0
+  - weight: 16
+    biome: 2
+  - weight: 16
+    biome: 1
   mountainHeightMultiplier: 0.8
   riverDepthMultiplier: 0.3
   waterLevel: 0.5

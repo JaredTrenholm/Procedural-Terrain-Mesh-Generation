@@ -19,7 +19,10 @@ public class MeshGenerator : MonoBehaviour
 
     [Header("Terrain Settings")]
     public int terrainSize = 20;
-    public float mountainHeightMultiplier;
+    public BiomeWeights[] weights;
+
+    [Header("Biome Settings")]
+    public float additionalMountainHeight;
     public float riverDepthMultiplier;
     public float waterLevel;
     public float requiredNeighbors;
@@ -30,17 +33,22 @@ public class MeshGenerator : MonoBehaviour
     [Range(1f, 10f)]
     public float amplitude = 2f;
 
-    private enum Biomes
+    public enum Biomes
     {
         Default,
         River,
         Mountain
     }
+
+    [Serializable]
+    public struct BiomeWeights
+    {
+        [Range(0, 100)]
+        public float weight;
+        public Biomes biome;
+    }
     private void Start()
     {
-        verticies = new Vector3[(terrainSize + 1) * (terrainSize + 1)];
-        biomes = new Biomes[terrainSize+1, terrainSize+1];
-        triangles = new int[terrainSize * terrainSize * 6];
         CreateTerrain();
     }
     private void Update()
@@ -50,6 +58,9 @@ public class MeshGenerator : MonoBehaviour
 
     public void CreateTerrain()
     {
+        verticies = new Vector3[(terrainSize + 1) * (terrainSize + 1)];
+        biomes = new Biomes[terrainSize + 1, terrainSize + 1];
+        triangles = new int[terrainSize * terrainSize * 6];
         GenerateBiomes();
         SmoothBiomes();
         GenerateMesh();
@@ -68,12 +79,12 @@ public class MeshGenerator : MonoBehaviour
         {
             for (int z = 0; z <= terrainSize; z++)
             {
-                if(PerlinNoise(playerTransform.position.x + x, playerTransform.position.z + z) > 3f)
-                    biomes[x, z] = Biomes.Mountain;
-                else if (PerlinNoise(playerTransform.position.x + x, playerTransform.position.z + z) > 1f)
-                    biomes[x, z] = Biomes.River;
-                else
-                    biomes[x, z] = Biomes.Default;
+                foreach (BiomeWeights biomeWeight in weights)
+                {
+                    float perlin = Mathf.PerlinNoise((playerTransform.position.x + x) * frequency, (playerTransform.position.z + z) * frequency) * 100;
+                    if (perlin <= biomeWeight.weight && biomes[x,z] == Biomes.Default)
+                        biomes[x, z] = biomeWeight.biome;
+                }
             }
         }
     }
@@ -198,21 +209,21 @@ public class MeshGenerator : MonoBehaviour
     }
     private float PerlinNoise(float x, float y)
     {
-        return Mathf.PerlinNoise(x * frequency, y * frequency) * amplitude;
+        return Mathf.Abs(Mathf.PerlinNoise(x * frequency, y * frequency) * amplitude);
     }
 
     private float GetBiomeHeight(float x, float z)
     {
         if (biomes[(int)x, (int)z] == Biomes.Mountain)
         {
-            return Mathf.PerlinNoise((x+playerTransform.position.x) * frequency, (z+playerTransform.position.z) * frequency) * amplitude*mountainHeightMultiplier;
+            return this.transform.position.y + PerlinNoise(x + playerTransform.position.x, z + playerTransform.position.z);
         }
         else if(biomes[(int)x, (int)z] == Biomes.River)
         {
-            return -(Mathf.PerlinNoise((x + playerTransform.position.x) * frequency, (z + playerTransform.position.z) * frequency) * amplitude * riverDepthMultiplier);
+            return -PerlinNoise(x + playerTransform.position.x, z + playerTransform.position.z);
         } else
         {
-            return this.transform.position.y + Mathf.PerlinNoise((x + playerTransform.position.x) * frequency, (z + playerTransform.position.z) * frequency);
+            return this.transform.position.y + PerlinNoise(x + playerTransform.position.x, z + playerTransform.position.z);
         }
     }
 }
