@@ -52,7 +52,6 @@ public class MeshGenerator : MonoBehaviour
     {
         GenerateBiomes();
         SmoothBiomes();
-        SmoothBiomes();
         GenerateMesh();
         UpdateMesh();
         UpdateWater();
@@ -60,7 +59,7 @@ public class MeshGenerator : MonoBehaviour
     private void UpdateWater()
     {
         waterPlane.transform.position = new Vector3(playerTransform.transform.position.x, this.transform.position.y-waterLevel, playerTransform.transform.position.z + (terrainSize / 4));
-        waterPlane.transform.localScale = new Vector3(0.1f * terrainSize, 1f, 0.1f * terrainSize);
+        waterPlane.transform.localScale = new Vector3(terrainSize, terrainSize, 1f);
     }
 
     private void GenerateBiomes()
@@ -71,7 +70,7 @@ public class MeshGenerator : MonoBehaviour
             {
                 if(PerlinNoise(playerTransform.position.x + x, playerTransform.position.z + z) > 3f)
                     biomes[x, z] = Biomes.Mountain;
-                else if (PerlinNoise(playerTransform.position.x + x, playerTransform.position.z + z) > 2f)
+                else if (PerlinNoise(playerTransform.position.x + x, playerTransform.position.z + z) > 1f)
                     biomes[x, z] = Biomes.River;
                 else
                     biomes[x, z] = Biomes.Default;
@@ -213,7 +212,7 @@ public class MeshGenerator : MonoBehaviour
             return -(Mathf.PerlinNoise((x + playerTransform.position.x) * frequency, (z + playerTransform.position.z) * frequency) * amplitude * riverDepthMultiplier);
         } else
         {
-            return this.transform.position.y;
+            return this.transform.position.y + Mathf.PerlinNoise((x + playerTransform.position.x) * frequency, (z + playerTransform.position.z) * frequency);
         }
     }
 }
