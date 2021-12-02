@@ -9,9 +9,8 @@ public class MeshGenerator : MonoBehaviour
     private Mesh mesh;
     private Vector3[] verticies;
     private Vector2[] uvs;
-    private int[] grassTriangles;
+    private int[] triangles;
     private int[] mudTriangles;
-    private int[] stoneTriangles;
     private Vector3 midPoint;
 
     [Header("Object Settings")]
@@ -23,24 +22,15 @@ public class MeshGenerator : MonoBehaviour
     [Header("Terrain Settings")]
     public int terrainSize = 20;
     public float waterLevel;
-    [Range(1f, 20f)]
-    public float vertexSpacing = 1;
-
-    [Header("Perlin Settings")]
-    [Range(0.001f, .999f)]
-    public float frequency = .3f;
-    [Range(1f, 20f)]
-    public float amplitude = 2f;
 
     private void Start()
     {
         midPoint = playerTransform.position;
-        biomes.Init(terrainSize);
         CreateTerrain();
     }
     private void Update()
     {
-       if (Vector3.Distance(playerTransform.position, midPoint) > terrainSize*vertexSpacing/ distanceDenomintator)
+        if (Vector3.Distance(playerTransform.position, midPoint) > terrainSize/ distanceDenomintator)
             CreateTerrain();
     }
 
@@ -49,6 +39,7 @@ public class MeshGenerator : MonoBehaviour
         midPoint = playerTransform.position;
         verticies = new Vector3[(terrainSize + 1) * (terrainSize + 1)];
         uvs = new Vector2[verticies.Length];
+        biomes.Init(playerTransform, terrainSize);
         GenerateMesh();
         UpdateMesh();
         UpdateWater();
@@ -60,45 +51,38 @@ public class MeshGenerator : MonoBehaviour
         {
             for (int z = 0; z <= terrainSize; z++)
             {
-                float y = PerlinNoise(playerTransform.position.x + x, playerTransform.position.z + z);
-                float cameraCenterX = terrainSize * vertexSpacing / distanceDenomintator;
-                float cameraCenterZ = terrainSize * vertexSpacing / distanceDenomintator;
+                float y = biomes.GetBiomeHeight(x, z);
+                float cameraCenterX = terrainSize / 2;
+                float cameraCenterZ = terrainSize / 4;
 
-                verticies[i] = new Vector3(playerTransform.position.x + ((x*vertexSpacing) - cameraCenterX), this.transform.position.y + y, playerTransform.position.z + ((z * vertexSpacing) - cameraCenterZ));
-                biomes.GenerateBiome(x,y,z);
+                verticies[i] = new Vector3(playerTransform.position.x + (x - cameraCenterX), this.transform.position.y + y, playerTransform.position.z + (z - cameraCenterZ));
                 uvs[i] = new Vector2((float)x / terrainSize, (float)z / terrainSize);
                 i++;
             }
         }
 
         int vert = 0, tris = 0;
-        grassTriangles = new int[terrainSize * terrainSize * 6];
+        triangles = new int[terrainSize * terrainSize * 6];
         mudTriangles = new int[terrainSize * terrainSize * 6];
-        stoneTriangles = new int[terrainSize * terrainSize * 6];
         for (int x = 0; x < terrainSize; x++)
         {
             for (int z = 0; z < terrainSize; z++)
             {
-                if (biomes.IsMountain(x,z))
-                {
-                    AddTriangle(stoneTriangles, tris, vert);
-                } else if (biomes.IsRiver(x, z))
+                if (biomes.IsMudXAxis(x,z)&& biomes.IsMudZAxis(x, z) || verticies[vert].y < this.transform.position.y)
                 {
                     AddTriangle(mudTriangles, tris, vert);
                 }
                 else
                 {
-                    AddTriangle(grassTriangles, tris, vert);
+                    AddTriangle(triangles, tris, vert);
                 }
-                
                 vert++;
                 tris += 6;
             }
             vert++;
         }
-        Array.Reverse(grassTriangles); // so that they face upwards
+        Array.Reverse(triangles); // so that they face upwards
         Array.Reverse(mudTriangles);
-        Array.Reverse(stoneTriangles);
     }
     private void AddTriangle(int[] triArray, int tris, int vert)
     {
@@ -120,30 +104,24 @@ public class MeshGenerator : MonoBehaviour
             };
         }
         mesh.vertices = verticies;
-        mesh.subMeshCount = 3;
-        mesh.SetTriangles(grassTriangles, 0);
+        mesh.subMeshCount = 2;
+        mesh.SetTriangles(triangles, 0);
         mesh.SetTriangles(mudTriangles, 1);
-        mesh.SetTriangles(stoneTriangles, 2);
         mesh.uv = uvs;
 
         GetComponent<MeshFilter>().mesh = mesh;
-        GetComponent<MeshCollider>().sharedMesh = mesh;
 
         mesh.RecalculateBounds();
         mesh.RecalculateNormals();
     }
     private void UpdateWater()
     {
-        float centerZ = (terrainSize*vertexSpacing) / 4;
+        float centerZ = terrainSize / 4;
         float defaultScale = 1f;
         waterPlane.transform.position = new Vector3(playerTransform.transform.position.x, this.transform.position.y + waterLevel, playerTransform.transform.position.z + centerZ);
-        waterPlane.transform.localScale = new Vector3(terrainSize*vertexSpacing, terrainSize * vertexSpacing, defaultScale);
+        waterPlane.transform.localScale = new Vector3(terrainSize, terrainSize, defaultScale);
     }
-    private float PerlinNoise(float x, float y)
-    {
-        return Mathf.Abs(Mathf.PerlinNoise(x * frequency, y * frequency) * amplitude);
-    }
+    
 
-
-
+    
 }
