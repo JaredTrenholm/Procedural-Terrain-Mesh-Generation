@@ -325,6 +325,7 @@ GameObject:
   - component: {fileID: 1556135869}
   - component: {fileID: 1556135873}
   - component: {fileID: 1556135868}
+  - component: {fileID: 1556135872}
   m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
@@ -344,19 +345,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 210b781e54ee4654685647a379d626d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  weights:
-  - weight: 33
-    biome: 1
-    removeBiome: 0
-  - weight: 8
-    biome: 2
-    removeBiome: 1
-  - weight: 55
-    biome: 2
-    removeBiome: 0
   requiredNeighbors: 3
-  frequency: 0.08
-  amplitude: 10
+  mountainHeight: 5
 --- !u!23 &1556135869
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -377,6 +367,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 0aa1e0523219e754299d9e5ae95d51c0, type: 2}
+  - {fileID: 2100000, guid: e210827c0fe1fe24ab57cb06e039ebe4, type: 2}
   - {fileID: 2100000, guid: e210827c0fe1fe24ab57cb06e039ebe4, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
@@ -422,6 +413,20 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!64 &1556135872
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1556135867}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 4
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 0}
 --- !u!114 &1556135873
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -437,9 +442,12 @@ MonoBehaviour:
   playerTransform: {fileID: 1953640090}
   waterPlane: {fileID: 648946508}
   biomes: {fileID: 1556135868}
-  distanceDenomintator: 6
-  terrainSize: 90
-  waterLevel: 3
+  distanceDenomintator: 2
+  terrainSize: 50
+  waterLevel: 0
+  vertexSpacing: 9
+  frequency: 0.3
+  amplitude: 20
 --- !u!1 &1953640086
 GameObject:
   m_ObjectHideFlags: 0
@@ -471,7 +479,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88e31d0f23c56a34dbc3b9fd15aee1cd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 10
+  speed: 15
 --- !u!81 &1953640088
 AudioListener:
   m_ObjectHideFlags: 0
@@ -531,7 +539,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1953640086}
   m_LocalRotation: {x: 0.6427876, y: 0, z: 0, w: 0.7660445}
-  m_LocalPosition: {x: -19, y: 45, z: 409}
+  m_LocalPosition: {x: -19, y: 160, z: 409}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}

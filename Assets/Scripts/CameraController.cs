@@ -9,7 +9,6 @@ public class CameraController : MonoBehaviour
     {
         Movement();
     }
-
     private void Movement()
     {
         this.transform.Translate(speed * Time.deltaTime * Vector3.forward, Space.World);
