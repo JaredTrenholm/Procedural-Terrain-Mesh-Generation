@@ -8,13 +8,16 @@ public class MeshGenerator : MonoBehaviour
 {
     private Mesh mesh;
     private Vector3[] verticies;
+    private Vector2[] uvs;
     private int[] triangles;
-    private int[] mountainTriangles;
+    private int[] mudTriangles;
+    private Vector3 midPoint;
 
     [Header("Object Settings")]
     public Transform playerTransform;
     public GameObject waterPlane;
     public BiomeGenerator biomes;
+    public float distanceDenomintator;
 
     [Header("Terrain Settings")]
     public int terrainSize = 20;
@@ -22,16 +25,20 @@ public class MeshGenerator : MonoBehaviour
 
     private void Start()
     {
+        midPoint = playerTransform.position;
         CreateTerrain();
     }
     private void Update()
     {
-        CreateTerrain();
+        if (Vector3.Distance(playerTransform.position, midPoint) > terrainSize/ distanceDenomintator)
+            CreateTerrain();
     }
 
     public void CreateTerrain()
     {
+        midPoint = playerTransform.position;
         verticies = new Vector3[(terrainSize + 1) * (terrainSize + 1)];
+        uvs = new Vector2[verticies.Length];
         biomes.Init(playerTransform, terrainSize);
         GenerateMesh();
         UpdateMesh();
@@ -49,20 +56,21 @@ public class MeshGenerator : MonoBehaviour
                 float cameraCenterZ = terrainSize / 4;
 
                 verticies[i] = new Vector3(playerTransform.position.x + (x - cameraCenterX), this.transform.position.y + y, playerTransform.position.z + (z - cameraCenterZ));
+                uvs[i] = new Vector2((float)x / terrainSize, (float)z / terrainSize);
                 i++;
             }
         }
 
         int vert = 0, tris = 0;
         triangles = new int[terrainSize * terrainSize * 6];
-        mountainTriangles = new int[terrainSize * terrainSize * 6];
+        mudTriangles = new int[terrainSize * terrainSize * 6];
         for (int x = 0; x < terrainSize; x++)
         {
             for (int z = 0; z < terrainSize; z++)
             {
-                if (biomes.IsMountainXAxis(x,z)&& biomes.IsMountainZAxis(x, z))
+                if (biomes.IsMudXAxis(x,z)&& biomes.IsMudZAxis(x, z) || verticies[vert].y < this.transform.position.y)
                 {
-                    AddTriangle(mountainTriangles, tris, vert);
+                    AddTriangle(mudTriangles, tris, vert);
                 }
                 else
                 {
@@ -74,8 +82,7 @@ public class MeshGenerator : MonoBehaviour
             vert++;
         }
         Array.Reverse(triangles); // so that they face upwards
-        Array.Reverse(mountainTriangles); 
-
+        Array.Reverse(mudTriangles);
     }
     private void AddTriangle(int[] triArray, int tris, int vert)
     {
@@ -99,7 +106,8 @@ public class MeshGenerator : MonoBehaviour
         mesh.vertices = verticies;
         mesh.subMeshCount = 2;
         mesh.SetTriangles(triangles, 0);
-        mesh.SetTriangles(mountainTriangles, 1);
+        mesh.SetTriangles(mudTriangles, 1);
+        mesh.uv = uvs;
 
         GetComponent<MeshFilter>().mesh = mesh;
 
@@ -108,8 +116,10 @@ public class MeshGenerator : MonoBehaviour
     }
     private void UpdateWater()
     {
-        waterPlane.transform.position = new Vector3(playerTransform.transform.position.x, this.transform.position.y + waterLevel, playerTransform.transform.position.z + (terrainSize / 4));
-        waterPlane.transform.localScale = new Vector3(terrainSize, terrainSize, 1f);
+        float centerZ = terrainSize / 4;
+        float defaultScale = 1f;
+        waterPlane.transform.position = new Vector3(playerTransform.transform.position.x, this.transform.position.y + waterLevel, playerTransform.transform.position.z + centerZ);
+        waterPlane.transform.localScale = new Vector3(terrainSize, terrainSize, defaultScale);
     }
     
 

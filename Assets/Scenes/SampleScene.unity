@@ -348,14 +348,15 @@ MonoBehaviour:
   - weight: 33
     biome: 1
     removeBiome: 0
-  - weight: 66
+  - weight: 8
+    biome: 2
+    removeBiome: 1
+  - weight: 55
     biome: 2
     removeBiome: 0
-  minimumMountainHeight: 0.5
-  riverDepthMultiplier: 10
-  requiredNeighbors: 1
-  frequency: 0.1
-  amplitude: 3
+  requiredNeighbors: 3
+  frequency: 0.08
+  amplitude: 10
 --- !u!23 &1556135869
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -376,7 +377,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 0aa1e0523219e754299d9e5ae95d51c0, type: 2}
-  - {fileID: 2100000, guid: aa830a2e8e482f94b8f9fa0ac8d39c8f, type: 2}
+  - {fileID: 2100000, guid: e210827c0fe1fe24ab57cb06e039ebe4, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -436,8 +437,9 @@ MonoBehaviour:
   playerTransform: {fileID: 1953640090}
   waterPlane: {fileID: 648946508}
   biomes: {fileID: 1556135868}
+  distanceDenomintator: 6
   terrainSize: 90
-  waterLevel: 5
+  waterLevel: 3
 --- !u!1 &1953640086
 GameObject:
   m_ObjectHideFlags: 0
@@ -528,10 +530,10 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1953640086}
-  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -19, y: 60, z: 409}
+  m_LocalRotation: {x: 0.6427876, y: 0, z: 0, w: 0.7660445}
+  m_LocalPosition: {x: -19, y: 45, z: 409}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 80, y: 0, z: 0}
