@@ -7,170 +7,54 @@ using UnityEngine;
 [RequireComponent(typeof(MeshGenerator))]
 public class BiomeGenerator : MonoBehaviour
 {
-    private Biomes[,] biomes;
-    private float terrainSize;
-    private Transform playerTransform; 
     [Header("Biome Settings")]
-    public BiomeWeights[] weights;
     public float requiredNeighbors;
+    public float mountainHeight;
+    public float snowHeight;
 
     [Header("Perlin Settings")]
     [Range(0.001f, .999f)]
     public float frequency = .3f;
-    [Range(1f, 10f)]
+    [Range(1f, 20f)]
     public float amplitude = 2f;
+
+    private Biomes[,] biomes;
+    private float terrainSize;
+    private Transform playerTransform;
+    private float waterLevel;
     public enum Biomes
     {
         Grass,
-        River,
+        Mountain,
+        Snow,
         Mud
     }
-    [Serializable]
-    public struct BiomeWeights
-    {
-        [Range(0, 100)]
-        public float weight;
-        public Biomes biome;
-        public Biomes removeBiome;
-    }
-    public void Init(Transform transform, float size)
+    public void Init(Transform transform, float size, float waterLevel)
     {
         playerTransform = transform;
         terrainSize = size;
         biomes = new Biomes[(int)terrainSize + 1, (int)terrainSize + 1];
-        GenerateBiomes();
+        this.waterLevel = waterLevel;
     }
-    public float GetBiomeHeight(float x, float z)
+    public float PopulateHeight(float x, float z)
     {
-        if (biomes[(int)x, (int)z] == Biomes.River)
-        {
-            return this.transform.position.y - PerlinNoise(x + playerTransform.position.x, z + playerTransform.position.z);
-        }
-        else
-        {
-            return this.transform.position.y + PerlinNoise(x + playerTransform.position.x, z + playerTransform.position.z);
-        }
+        float perlin = this.transform.position.y + PerlinNoise(x + Mathf.FloorToInt(playerTransform.position.x), z + Mathf.FloorToInt(playerTransform.position.z));
+        PopulateHeightBasedBiome(perlin, x, z);
+        return perlin;
 
     }
-    public bool IsMudXAxis(float x, float z)
+    public bool IsMud(int x, int z){ return biomes[x, z] == Biomes.Mud; }
+    public bool IsMountain(int x, int z) { return biomes[x, z] == Biomes.Mountain; }
+    public bool IsSnow(int x, int z) { return biomes[x, z] == Biomes.Snow; }
+    private void PopulateHeightBasedBiome(float perlin, float x, float z)
     {
-        bool isMountain = false;
-        
-        if(biomes[(int)x, (int)z] == Biomes.Mud)
-        {
-            if (x + 1 < terrainSize)
-            {
-                if (biomes[(int)x+1, (int)z] == Biomes.Mud && GetSameBiomeNeighborCount((int)x, (int)z,Biomes.Mud) >= requiredNeighbors)
-                {
-                    isMountain = true;  
-                }
-                else
-                {
-                    isMountain = false;
-                }
-            } else
-            {
-                isMountain = false;
-            }
-        }
-
-        return isMountain;
-    }
-    public bool IsMudZAxis(float x, float z)
-    {
-        bool isMountain = false;
-
-        if (biomes[(int)x, (int)z] == Biomes.Mud)
-        {
-            if (z + 1 < terrainSize)
-            {
-                if (biomes[(int)x , (int)z + 1] == Biomes.Mud && GetSameBiomeNeighborCount((int)x, (int)z, Biomes.Mud) >= requiredNeighbors)
-                {
-                    isMountain = true;
-                }
-                else
-                {
-                    isMountain = false;
-                }
-            }
-            else
-            {
-                isMountain = false;
-            }
-        }
-
-        return isMountain;
-    }
-    private void GenerateBiomes()
-    {
-        for (int x = 0; x <= terrainSize; x++)
-        {
-            for (int z = 0; z <= terrainSize; z++)
-            {
-                foreach (BiomeWeights biomeWeight in weights)
-                {
-                    float perlin = Mathf.PerlinNoise((playerTransform.position.x + x) * frequency, (playerTransform.position.z + z) * frequency) * 100;
-                    if (perlin <= biomeWeight.weight && biomes[x, z] == biomeWeight.removeBiome)
-                        biomes[x, z] = biomeWeight.biome;
-                }
-            }
-        }
-        SmoothBiomes();
-    }
-    private void SmoothBiomes()
-    {
-        for (int x = 0; x <= terrainSize; x++)
-        {
-            for (int z = 0; z <= terrainSize; z++)
-            {
-                for (int i = 0; i < weights.Length; i++) { 
-                    if (biomes[x, z] == weights[i].biome)
-                        if (GetSameBiomeNeighborCount(x, z, weights[i].biome) < requiredNeighbors)
-                        {
-                            biomes[x, z] = weights[i].removeBiome;
-                        }
-                }
-            }
-        }
-    }
-
-    private int GetSameBiomeNeighborCount(int x, int z, Biomes biomeType)
-    {
-        int biomeCount = 0;
-        if (x > 0)
-        {
-            if (biomes[x - 1, z] == biomeType) biomeCount++;
-        }
-        else return (int)requiredNeighbors;
-        if (x < terrainSize) { 
-            if (biomes[x + 1, z] == biomeType) biomeCount++;
-        }
-        else return (int)requiredNeighbors;
-        if (z > 0) { 
-            if (biomes[x, z - 1] == biomeType) biomeCount++;
-        }
-        else return (int)requiredNeighbors;
-        if (z < terrainSize) { 
-            if (biomes[x, z + 1] == biomeType) biomeCount++;
-        }
-        else return (int)requiredNeighbors;
-        if (x > 0 && z > 0) { 
-            if (biomes[x - 1, z - 1] == biomeType) biomeCount++;
-        }
-        else return (int)requiredNeighbors;
-        if (x < terrainSize && z > 0) { 
-            if (biomes[x + 1, z - 1] == biomeType) biomeCount++;
-        }
-        else return (int)requiredNeighbors;
-        if (x > 0 && z < terrainSize) { 
-            if (biomes[x - 1, z + 1] == biomeType) biomeCount++;
-        }
-        else return (int)requiredNeighbors;
-        if (x < terrainSize && z < terrainSize) { 
-            if (biomes[x + 1, z + 1] == biomeType) biomeCount++;
-        }
-        else return (int)requiredNeighbors;
-        return biomeCount;
+        float waterBorder = 1;
+        if (perlin >= this.transform.position.y + mountainHeight)
+            biomes[(int)x, (int)z] = Biomes.Mountain;
+        if (perlin >= this.transform.position.y + snowHeight)
+            biomes[(int)x, (int)z] = Biomes.Snow;
+        if (perlin <= this.transform.position.y + waterLevel+waterBorder)
+            biomes[(int)x, (int)z] = Biomes.Mud;
     }
     private float PerlinNoise(float x, float y)
     {
