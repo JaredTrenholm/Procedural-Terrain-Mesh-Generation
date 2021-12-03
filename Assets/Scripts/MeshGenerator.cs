@@ -49,8 +49,17 @@ public class MeshGenerator : MonoBehaviour
         uvs = new Vector2[verticies.Length];
         biomes.Init(playerTransform, terrainSize, waterLevel);
         GenerateMesh();
+        biomes.CreateDetails(verticies);
         UpdateMesh();
         UpdateWater();
+    }
+    public Vector3 WorldPointToVertex(Vector3 vertex)
+    {
+        vertex.x -= playerTransform.position.x;
+        vertex.z -= playerTransform.position.z;
+        vertex.x += cameraCenterX;
+        vertex.z += cameraCenterZ;
+        return vertex;
     }
 
     private void GenerateMesh()

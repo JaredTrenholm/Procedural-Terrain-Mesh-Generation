@@ -344,9 +344,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 210b781e54ee4654685647a379d626d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  meshGen: {fileID: 1556135873}
   requiredNeighbors: 3
   mountainHeight: 9
   snowHeight: 14
+  detailObjects:
+  - objectToSpawn: {fileID: 1369031296425274, guid: 22a3fd8d3e59a1149bdcd775c0e87241, type: 3}
+    biome: 0
+    chance: 50
+    spawnRadius: 30
+  - objectToSpawn: {fileID: 1689892608009186, guid: 6fc2010b5899cfd488a0ddf205679e2b, type: 3}
+    biome: 1
+    chance: 30
+    spawnRadius: 15
+  - objectToSpawn: {fileID: 1689892608009186, guid: 6fc2010b5899cfd488a0ddf205679e2b, type: 3}
+    biome: 2
+    chance: 30
+    spawnRadius: 15
   frequency: 0.03
   amplitude: 20
 --- !u!23 &1556135869

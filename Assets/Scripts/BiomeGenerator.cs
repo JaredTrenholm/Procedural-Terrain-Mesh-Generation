@@ -8,9 +8,14 @@ using UnityEngine;
 public class BiomeGenerator : MonoBehaviour
 {
     [Header("Biome Settings")]
+    public MeshGenerator meshGen;
     public float requiredNeighbors;
     public float mountainHeight;
     public float snowHeight;
+
+    [Header("Detail Settings")]
+    public DetailObject[] detailObjects;
+    
 
     [Header("Perlin Settings")]
     [Range(0.001f, .999f)]
@@ -18,10 +23,22 @@ public class BiomeGenerator : MonoBehaviour
     [Range(1f, 20f)]
     public float amplitude = 2f;
 
+    [Serializable]
+    public struct DetailObject
+    {
+        public GameObject objectToSpawn;
+        public Biomes biome;
+        public float chance;
+        public float spawnRadius;
+    }
+
+
+
     private Biomes[,] biomes;
     private float terrainSize;
     private Transform playerTransform;
     private float waterLevel;
+    private List<GameObject> details = new List<GameObject>();
     public enum Biomes
     {
         Grass,
@@ -46,6 +63,42 @@ public class BiomeGenerator : MonoBehaviour
     public bool IsMud(int x, int z){ return biomes[x, z] == Biomes.Mud; }
     public bool IsMountain(int x, int z) { return biomes[x, z] == Biomes.Mountain; }
     public bool IsSnow(int x, int z) { return biomes[x, z] == Biomes.Snow; }
+    public void CreateDetails(Vector3[] vertexArray)
+    {
+        foreach(GameObject gameObject in details)
+        {
+            Destroy(gameObject);
+        }
+        details.Clear();
+        SpawnObjects(vertexArray);
+    }
+    private void SpawnObjects(Vector3[] vertexArray)
+    {
+        foreach (DetailObject detailObject in detailObjects)
+        {
+            foreach (Vector3 vertex in vertexArray)
+            {
+                if (biomes[(int)meshGen.WorldPointToVertex(vertex).x, (int)meshGen.WorldPointToVertex(vertex).z] != detailObject.biome)
+                    continue;
+
+                float perlin = PerlinNoise(vertex.x, vertex.z) * (100 / amplitude);
+                if (perlin <= detailObject.chance)
+                {
+                    bool skip = false;
+                    foreach (GameObject detail in details)
+                    {
+                        if (Vector3.Distance(detail.transform.position, vertex) < detailObject.spawnRadius)
+                            skip = true;
+                    }
+                    if (skip)
+                        continue;
+                    GameObject spawnedObject = GameObject.Instantiate(detailObject.objectToSpawn);
+                    spawnedObject.transform.position = vertex;
+                    details.Add(spawnedObject);
+                }
+            }
+        }
+    }
     private void PopulateHeightBasedBiome(float perlin, float x, float z)
     {
         float waterBorder = 1;
