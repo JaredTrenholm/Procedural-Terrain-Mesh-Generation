@@ -65,11 +65,6 @@ public class BiomeGenerator : MonoBehaviour
     public bool IsSnow(int x, int z) { return biomes[x, z] == Biomes.Snow; }
     public void CreateDetails(Vector3[] vertexArray)
     {
-        foreach(GameObject gameObject in details)
-        {
-            Destroy(gameObject);
-        }
-        details.Clear();
         SpawnObjects(vertexArray);
     }
     private void SpawnObjects(Vector3[] vertexArray)

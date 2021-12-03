@@ -512,7 +512,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   meshGen: {fileID: 1556135873}
   requiredNeighbors: 3
-  mountainHeight: 9
+  mountainHeight: 10
   snowHeight: 14
   detailObjects:
   - objectToSpawn: {fileID: 1369031296425274, guid: 22a3fd8d3e59a1149bdcd775c0e87241, type: 3}
@@ -523,11 +523,19 @@ MonoBehaviour:
     biome: 1
     chance: 30
     spawnRadius: 15
-  - objectToSpawn: {fileID: 1689892608009186, guid: 6fc2010b5899cfd488a0ddf205679e2b, type: 3}
+  - objectToSpawn: {fileID: 1994015782226202, guid: dc9954dcaaaee02409e17bacb3dcc453, type: 3}
     biome: 2
     chance: 30
     spawnRadius: 15
-  frequency: 0.03
+  - objectToSpawn: {fileID: 1046453777464574, guid: 1aad01ae01d836647b215e40f1f4c1a7, type: 3}
+    biome: 0
+    chance: 30
+    spawnRadius: 5
+  - objectToSpawn: {fileID: 1187590036259114, guid: e1154cf6ac27b2f45b4ae35582e7e363, type: 3}
+    biome: 3
+    chance: 50
+    spawnRadius: 7
+  frequency: 0.08
   amplitude: 20
 --- !u!23 &1556135869
 MeshRenderer:
@@ -686,7 +694,9 @@ MonoBehaviour:
     m_LineSpacing: 1
   m_Text: 'CREDITS:
 
-    Models - Gigel'
+    Models - Gigel
+
+    Code - Jared'
 --- !u!222 &1682994840
 CanvasRenderer:
   m_ObjectHideFlags: 0
